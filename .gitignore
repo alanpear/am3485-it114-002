@@ -1,8 +1,8 @@
-<<<<<<< HEAD
-.vscode
-*.class
-=======
+
 .DS_Store
+
 *.class
+
 .vscode
->>>>>>> 84b0a767b9efbcb70b19bb30ef277d6851fe0d81
+
+
