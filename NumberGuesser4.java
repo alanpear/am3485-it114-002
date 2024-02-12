@@ -135,6 +135,7 @@ public class NumberGuesser4 {
                 lose();
                 pickNewRandom = true;
             }
+            //am3485 2/12/2024
             else{
                 if(number < guess){
                     System.out.println("lower");
@@ -158,6 +159,7 @@ public class NumberGuesser4 {
         }
         return guess;
     }
+    //am3485 2/12/2024
     public void setStrikes (int newStrikes){
         maxStrikes=newStrikes;
     }
@@ -167,12 +169,16 @@ public class NumberGuesser4 {
             System.out.println("Welcome to NumberGuesser4.0");
             System.out.println("To exit, type the word 'quit'.");
             loadState();
+
+            //am3485 2/12/2024
             System.out.println("Pick a difficulty h for hard(3 strikes), m for medium(5 strikes), e for easy(10 strikes)");
             String h = input.nextLine();
             if(h.equals("h")) this.setStrikes(3);
             else if(h.equals("m")) this.setStrikes(5);
             else if(h.equals("e")) this.setStrikes(10);
             else System.out.println("you did not pick a valid value so you are defaulted to medium difficulty");
+            
+            
             do {
                 if (pickNewRandom) {
                     generateNewNumber(level);
