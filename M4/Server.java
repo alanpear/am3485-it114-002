@@ -97,4 +97,12 @@ public class Server {
         server.start(port);
         System.out.println("Server Stopped");
     }
+    
+    public  void roll(int die){
+        int count = 0;
+        for(int i = 0; i<die; i++){
+            count += (int)((Math.random()*6)+1);
+        }
+        System.out.println(this.getId() + "rolled a " + count);
+    }
 }

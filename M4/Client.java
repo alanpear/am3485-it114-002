@@ -76,8 +76,7 @@ public class Client {
      */
     private boolean isConnection(String text) {
         // https://www.w3schools.com/java/java_regex.asp
-        return text.matches(ipAddressPattern)
-                || text.matches(localhostPattern);
+        return text.matches(ipAddressPattern) || text.matches(localhostPattern);
     }
 
     private boolean isQuit(String text) {
@@ -229,5 +228,6 @@ public class Client {
             e.printStackTrace();
         }
     }
-
+    
+    
 }
