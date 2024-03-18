@@ -1,4 +1,4 @@
-package M4;
+package M5;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -12,11 +12,12 @@ public class Client {
     Socket server = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    final String ipAddressPattern = "connect\\s+(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{3,5})";
-    final String localhostPattern = "connect\\s+(localhost:\\d{3,5})";
+    final String ipAddressPattern = "/connect\\s+(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{3,5})";
+    final String localhostPattern = "/connect\\s+(localhost:\\d{3,5})";
     boolean isRunning = false;
     private Thread inputThread;
     private Thread fromServerThread;
+    private String clientName = "";
 
     public Client() {
         System.out.println("");
@@ -50,6 +51,7 @@ public class Client {
             in = new ObjectInputStream(server.getInputStream());
             System.out.println("Client connected");
             listenForServerMessage();
+            sendConnect();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -76,11 +78,24 @@ public class Client {
      */
     private boolean isConnection(String text) {
         // https://www.w3schools.com/java/java_regex.asp
-        return text.matches(ipAddressPattern) || text.matches(localhostPattern);
+        return text.matches(ipAddressPattern)
+                || text.matches(localhostPattern);
     }
 
     private boolean isQuit(String text) {
-        return text.equalsIgnoreCase("quit");
+        return text.equalsIgnoreCase("/quit");
+    }
+
+    private boolean isName(String text) {
+        if (text.startsWith("/name")) {
+            String[] parts = text.split(" ");
+            if (parts.length >= 2) {
+                clientName = parts[1].trim();
+                System.out.println("Name set to " + clientName);
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -94,6 +109,10 @@ public class Client {
      */
     private boolean processCommand(String text) {
         if (isConnection(text)) {
+            if (clientName.isBlank()) {
+                System.out.println("You must set your name before you can connect via: /name your_name");
+                return true;
+            }
             // replaces multiple spaces with single space
             // splits on the space after connect (gives us host and port)
             // splits on : to get host as index 0 and port as index 1
@@ -103,10 +122,29 @@ public class Client {
         } else if (isQuit(text)) {
             isRunning = false;
             return true;
+        } else if (isName(text)) {
+            return true;
         }
         return false;
     }
 
+    // Send methods
+    private void sendConnect() throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.CONNECT);
+        p.setClientName(clientName);
+        out.writeObject(p);
+    }
+
+    private void sendMessage(String message) throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.MESSAGE);
+        p.setMessage(message);
+        p.setClientName(clientName);
+        out.writeObject(p);
+    }
+
+    // end send methods
     private void listenForKeyboard() {
         inputThread = new Thread() {
             @Override
@@ -121,7 +159,9 @@ public class Client {
                             line = si.nextLine();
                             if (!processCommand(line)) {
                                 if (isConnected()) {
-                                    out.writeObject(line);
+                                    if (line != null && line.trim().length() > 0) {
+                                        sendMessage(line);
+                                    }
 
                                 } else {
                                     System.out.println("Not connected to server");
@@ -148,13 +188,15 @@ public class Client {
             @Override
             public void run() {
                 try {
-                    String fromServer;
+                    Payload fromServer;
 
                     // while we're connected, listen for strings from server
                     while (!server.isClosed() && !server.isInputShutdown()
-                            && (fromServer = (String) in.readObject().toString()) != null) {
+                            && (fromServer = (Payload) in.readObject()) != null) {
 
-                        System.out.println(fromServer);
+                        System.out.println("Debug Info: " + fromServer);
+                        processMessage(fromServer);
+
                     }
                     System.out.println("Loop exited");
                 } catch (Exception e) {
@@ -171,7 +213,25 @@ public class Client {
             }
         };
         fromServerThread.start();// start the thread
+    }
 
+    private void processMessage(Payload p) {
+        switch (p.getPayloadType()) {
+            case CONNECT:// for now connect,disconnect are all the same
+            case DISCONNECT:
+                System.out.println(String.format("*%s %s*",
+                        p.getClientName(),
+                        p.getMessage()));
+                break;
+            case MESSAGE:
+                System.out.println(String.format("%s: %s",
+                        p.getClientName(),
+                        p.getMessage()));
+                break;
+            default:
+                break;
+
+        }
     }
 
     public void start() throws IOException {
@@ -228,6 +288,5 @@ public class Client {
             e.printStackTrace();
         }
     }
-    
-    
+
 }
