@@ -1,4 +1,4 @@
-package Module5.Part5;
+package M5;
 
 import java.util.ArrayList;
 import java.util.Iterator;
