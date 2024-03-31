@@ -7,12 +7,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import Project.Common.Constants;
 import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
-import Deck;
 
 import java.util.List;
 
@@ -26,6 +26,7 @@ public enum Server {
     private boolean isRunning = true;
     private long nextClientId = 1;// <-- uniquely identifies clients (could use a UUID but we're keeping it basic)
     private Logger logger = Logger.getLogger(Server.class.getName());
+    private String[] cards;
 
     private void start(int port) {
         this.port = port;
@@ -243,5 +244,22 @@ public enum Server {
         }
         server.start(port);
         Server.INSTANCE.logger.info("Server Stopped");
+    }
+
+    public synchronized void deck(){
+        cards = new String[]{"Ace of Diamonds", "Two of Diamonds", "Three of Diamonds", "Four of Diamonds", "Five of Diamonds", "Six of Diamonds", "Seven of Diamonds", "Eight of Diamonds", "Nine of Diamonds", "Ten of Diamonds", "Jack of Diamonds", "Queen of Diamonds", "King of Diamonds", "Ace of Hearts", "Two of Hearts", "Three of Hearts", "Four of Hearts", "Five of Hearts", "Six of Hearts", "Seven of Hearts", "Eight of Hearts", "Nine of Hearts", "Ten of Hearts", "Jack of Hearts", "Queen of Hearts", "King of Hearts", "Ace of Clubs", "Two of Clubs", "Three of Clubs", "Four of Clubs", "Five of Clubs", "Six of Clubs", "Seven of Clubs", "Eight of Clubs", "Nine of Clubs", "Ten of Clubs", "Jack of Clubs", "Queen of Clubs", "King of Clubs", "Ace of Spades", "Two of Spades", "Three of Spades", "Four of Spades", "Five of Spades", "Six of Spades", "Seven of Spades", "Eight of Spades", "Nine of Spades", "Ten of Spades", "Jack of Spades", "Queen of Spades", "King of Spades"};
+        //creates deck and instantly shuffles it
+        shuffle();
+        
+    }
+
+    public synchronized void shuffle(){
+        Random rand = new Random();
+        for (int i = cards.length - 1; i > 0; i--) {
+            int index = rand.nextInt(i + 1);
+            String temp = cards[i];
+            cards[i] = cards[index];
+            cards[index] = temp;
+        }
     }
 }
