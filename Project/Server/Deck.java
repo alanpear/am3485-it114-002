@@ -25,4 +25,7 @@ public class Deck {
         cards.clear();
         cards.addAll(list);
     }
+    public String draw(){
+        return cards.pop();
+    }
 }
