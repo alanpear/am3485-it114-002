@@ -6,6 +6,10 @@ public class ClientPlayer extends Player {
     private long clientId;
     private String clientName;
 
+    public ClientPlayer(){
+        super();
+    }
+
     public long getClientId() {
         return clientId;
     }
