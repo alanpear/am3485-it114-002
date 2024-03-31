@@ -42,6 +42,6 @@ public class GoFishPayload extends Payload {
     @Override
     public String toString() {
         return String.format("Action[%s], CardList[%s], Points[%s]", 
-                getAction(), getCardList());
+                getAction(), getCardList(), getPointList());
     }
 }
