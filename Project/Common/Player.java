@@ -1,15 +1,23 @@
 package Project.Common;
 
- 
+ import Project.Client.Hand;
 /**
  * For chatroom projects, you can call this "User"
  */
 public class Player {
     private boolean isReady;
+    private Hand hand;
 
+    public Player(){
+        hand = new Hand();
+    }
 
     public boolean isReady() {
         return isReady;
+    }
+    
+    public Hand getHand(){
+        return this.hand;
     }
 
     public void setReady(boolean isReady) {
