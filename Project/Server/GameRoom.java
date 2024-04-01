@@ -28,10 +28,8 @@ public class GameRoom extends Room {
     private boolean canEndSession = false;
     private ServerPlayer currentPlayer = null;
     private List<Long> turnOrder = new ArrayList<Long>();
-    
-    
-    Deck deck = new Deck(); //am3485
 
+    Deck deck = new Deck(); // am3485
 
     public GameRoom(String name) {
         super(name);
@@ -56,7 +54,6 @@ public class GameRoom extends Room {
             if (currentPlayer != null) {
                 sp.sendCurrentPlayerTurn(currentPlayer.getClientId());
             }
-
 
         }
     }
@@ -177,14 +174,14 @@ public class GameRoom extends Room {
             return;
         }
         canEndSession = false;
-        
-        //am3485
+
+        // am3485
         deck.shuffle();
         players.forEach((key, value) -> {
             // Call your method here, passing the value
             value.getHand().setHand(deck.draw(), deck.draw(), deck.draw(), deck.draw(), deck.draw());
         });
-        //am3485
+        // am3485
 
         changePhase(Phase.TURN);
         numActivePlayers = players.values().stream().filter(ServerPlayer::isReady).count();
@@ -281,6 +278,37 @@ public class GameRoom extends Room {
         sendResetLocalTurns();
     }
 
+    public void draw(String m, ServerThread client) {
+        long clientId = client.getClientId();
+        players.forEach((key, value) -> {
+            // Call your method here, passing the value
+            if (clientId == value.getClientId()) {
+                value.getHand().addToHand(deck.draw());
+                value.getHand().toString();
+            }
+        });
+    }
+
+    public void requestCard(String m, ServerThread client) {
+        /*long clientId = client.getClientId();
+        long matchId;
+        players.forEach((key, value) -> {
+            // Call your method here, passing the value
+            String[] parts = m.split(" ");
+            if (value.getClientName() == parts[0]) {
+                //matchId = value.getClientId();
+            }
+            if (clientId == value.getClientId()) {
+
+                value.getHand();
+            }
+            
+
+
+        });
+        */
+    }
+
     private void end() {
         System.out.println(TextFX.colorize("Doing game over", Color.YELLOW));
         turnOrder.clear();
@@ -333,6 +361,7 @@ public class GameRoom extends Room {
             sp.sendPlayerTurnStatus(isp.getClientId(), isp.didTakeTurn());
         }
     }
+
     private void syncCurrentPhase() {
         Iterator<ServerPlayer> iter = players.values().iterator();
         while (iter.hasNext()) {

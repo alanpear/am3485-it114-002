@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import Project.Common.Constants;
+import Project.Client.Hand;
 
 public class Room implements AutoCloseable {
     // protected static Server server;// used to refer to accessible server
@@ -204,6 +205,7 @@ public class Room implements AutoCloseable {
             }
         }
     }
+
 
     private void handleDisconnect(Iterator<ServerThread> iter, ServerThread client) {
         iter.remove();

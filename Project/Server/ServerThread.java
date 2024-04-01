@@ -54,6 +54,7 @@ public class ServerThread extends Thread {
     protected boolean isRunning() {
         return isRunning;
     }
+
     protected void setClientName(String name) {
         if (name == null || name.isBlank()) {
             logger.severe("Invalid client name being set");
@@ -110,6 +111,7 @@ public class ServerThread extends Thread {
         tsp.setDidTakeTurn(didTakeTurn);
         return send(tsp);
     }
+
     protected boolean sendReadyState(long clientId, boolean isReady) {
         ReadyPayload rp = new ReadyPayload();
         rp.setReady(isReady);
@@ -123,6 +125,7 @@ public class ServerThread extends Thread {
         p.setMessage(phase);
         return send(p);
     }
+
     protected boolean sendClientMapping(long id, String name) {
         ConnectionPayload cp = new ConnectionPayload();
         cp.setPayloadType(PayloadType.SYNC_CLIENT);
@@ -144,6 +147,7 @@ public class ServerThread extends Thread {
         cp.setClientName(clientName);
         return send(cp);
     }
+
     private boolean sendListRooms(List<String> potentialRooms) {
         RoomResultsPayload rp = new RoomResultsPayload();
         rp.setRooms(potentialRooms);
@@ -266,6 +270,7 @@ public class ServerThread extends Thread {
             case LIST_ROOMS:
                 String searchString = p.getMessage() == null ? "" : p.getMessage();
                 int limit = 10;
+                System.out.println("in server thread" + p.getMessage());
                 try {
                     RoomResultsPayload rp = ((RoomResultsPayload) p);
                     limit = rp.getLimit();
@@ -294,6 +299,22 @@ public class ServerThread extends Thread {
                             "You can only use the /turn commmand in a GameRoom and not the Lobby");
                 }
                 break;
+            case DRAW:
+                try {
+                    ((GameRoom) currentRoom).draw(p.getMessage(), this);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    this.sendMessage(Constants.DEFAULT_CLIENT_ID,
+                            "You can only use the /turn commmand in a GameRoom and not the Lobby");
+                }
+            case REQUEST_CARD:
+                try {
+                    ((GameRoom) currentRoom).requestCard(p.getMessage(), this);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    this.sendMessage(Constants.DEFAULT_CLIENT_ID,
+                            "You can only use the /turn commmand in a GameRoom and not the Lobby");
+                }
             default:
                 break;
 
