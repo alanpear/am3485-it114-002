@@ -1,4 +1,4 @@
-package Project1.Common;
+package Project.Common;
 
 public class FlipPayload extends Payload {
     private String result;
@@ -21,3 +21,4 @@ public class FlipPayload extends Payload {
                 getResult(), getClientId());
     }
 }
+//am3485 4/1/2024

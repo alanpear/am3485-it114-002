@@ -2,8 +2,6 @@ package Project.Common;
 
 import java.io.Serializable;
 
-import Project.Client.ClientPlayer;
-
 public class Payload implements Serializable {
 
     private long clientId;
@@ -53,5 +51,4 @@ public class Payload implements Serializable {
         return String.format("Type[%s], Message[%s], ClientId[%s]", getPayloadType().toString(),
                 getMessage(), getClientId());
     }
-
 }

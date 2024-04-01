@@ -10,7 +10,6 @@ public class ServerPlayer extends Player {
     private ServerThread client;
 
     public ServerPlayer(ServerThread t) {
-        super();//am3485
         client = t;
         System.out.println(TextFX.colorize("Wrapped ServerThread " + t.getClientName(), Color.CYAN));
     }

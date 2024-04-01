@@ -9,10 +9,11 @@ import java.util.logging.Logger;
 
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
-import Project.Common.GoFishPayload;
+import Project.Common.FlipPayload;
 import Project.Common.Payload;
 import Project.Common.PayloadType;
 import Project.Common.ReadyPayload;
+import Project.Common.RollPayload;
 import Project.Common.RoomResultsPayload;
 import Project.Common.TextFX;
 import Project.Common.TurnStatusPayload;
@@ -55,7 +56,6 @@ public class ServerThread extends Thread {
     protected boolean isRunning() {
         return isRunning;
     }
-
     protected void setClientName(String name) {
         if (name == null || name.isBlank()) {
             logger.severe("Invalid client name being set");
@@ -112,7 +112,6 @@ public class ServerThread extends Thread {
         tsp.setDidTakeTurn(didTakeTurn);
         return send(tsp);
     }
-
     protected boolean sendReadyState(long clientId, boolean isReady) {
         ReadyPayload rp = new ReadyPayload();
         rp.setReady(isReady);
@@ -126,7 +125,6 @@ public class ServerThread extends Thread {
         p.setMessage(phase);
         return send(p);
     }
-
     protected boolean sendClientMapping(long id, String name) {
         ConnectionPayload cp = new ConnectionPayload();
         cp.setPayloadType(PayloadType.SYNC_CLIENT);
@@ -148,7 +146,6 @@ public class ServerThread extends Thread {
         cp.setClientName(clientName);
         return send(cp);
     }
-
     private boolean sendListRooms(List<String> potentialRooms) {
         RoomResultsPayload rp = new RoomResultsPayload();
         rp.setRooms(potentialRooms);
@@ -271,7 +268,6 @@ public class ServerThread extends Thread {
             case LIST_ROOMS:
                 String searchString = p.getMessage() == null ? "" : p.getMessage();
                 int limit = 10;
-                System.out.println("in server thread" + p.getMessage());
                 try {
                     RoomResultsPayload rp = ((RoomResultsPayload) p);
                     limit = rp.getLimit();
@@ -300,23 +296,22 @@ public class ServerThread extends Thread {
                             "You can only use the /turn commmand in a GameRoom and not the Lobby");
                 }
                 break;
-            case DRAW:
-                try {
-                    ((GameRoom) currentRoom).draw(this);
-                } catch (Exception e) {
-                    e.printStackTrace();
+            case FLIP:
+                try{
+                    FlipPayload fp = (FlipPayload) p;
+                    fp.toString();//am3485 4/1/2024
+                    send(fp);
+                }catch (Exception e){
                     this.sendMessage(Constants.DEFAULT_CLIENT_ID,
                             "You can only use the /turn commmand in a GameRoom and not the Lobby");
                 }
                 break;
-            case REQUEST_CARD:
-                try {
-                    System.out.println("this is in server thread " + p);
-                    GoFishPayload gp = (GoFishPayload) p;
-                    //((GameRoom) currentRoom).request(this, gp);
-                    this.send(gp);
-                } catch (Exception e) {
-                    e.printStackTrace();
+            case ROLL:
+                try{
+                    RollPayload rp =(RollPayload) p;
+                    rp.toString();
+                    send(rp);//am3485 4/1/2024
+                }catch (Exception e){
                     this.sendMessage(Constants.DEFAULT_CLIENT_ID,
                             "You can only use the /turn commmand in a GameRoom and not the Lobby");
                 }

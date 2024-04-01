@@ -1,10 +1,10 @@
-package Project1.Common;
+package Project.Common;
 
 public class RollPayload extends Payload {
     private int numDice;
     private int numSides;
     private int results;
-
+    //am3485 4/1/2024
     public RollPayload() {
         setPayloadType(PayloadType.ROLL);
     }

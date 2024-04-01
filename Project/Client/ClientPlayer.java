@@ -1,14 +1,12 @@
 package Project.Client;
 
+import java.io.Serializable;
+
 import Project.Common.Player;
 
-public class ClientPlayer extends Player {
+public class ClientPlayer extends Player implements Serializable{
     private long clientId;
     private String clientName;
-    
-    public ClientPlayer(){
-        super();
-    }
 
     public long getClientId() {
         return clientId;

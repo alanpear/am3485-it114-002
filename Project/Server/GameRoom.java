@@ -1,5 +1,7 @@
 package Project.Server;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -8,21 +10,17 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import Project.Client.ClientPlayer;
 import Project.Common.Constants;
+import Project.Common.FlipPayload;
 import Project.Common.Phase;
-import Project.Common.Player;
 import Project.Common.TextFX;
 import Project.Common.TimedEvent;
 import Project.Common.TextFX.Color;
 
-import Project.Server.Deck; //am3485
-import Project.Common.GoFishPayload;
-
 public class GameRoom extends Room {
 
     private ConcurrentHashMap<Long, ServerPlayer> players = new ConcurrentHashMap<Long, ServerPlayer>();
-
+    private ObjectOutputStream out = null;
     private TimedEvent readyCheckTimer = null;
     private TimedEvent turnTimer = null;
     private Phase currentPhase = Phase.READY;
@@ -30,8 +28,6 @@ public class GameRoom extends Room {
     private boolean canEndSession = false;
     private ServerPlayer currentPlayer = null;
     private List<Long> turnOrder = new ArrayList<Long>();
-
-    Deck deck = new Deck(); // am3485
 
     public GameRoom(String name) {
         super(name);
@@ -44,6 +40,7 @@ public class GameRoom extends Room {
             ServerPlayer sp = new ServerPlayer(client);
             players.put(client.getClientId(), sp);
             System.out.println(TextFX.colorize(client.getClientName() + " join GameRoom " + getName(), Color.WHITE));
+
             // sync game state
 
             // sync phase
@@ -92,6 +89,11 @@ public class GameRoom extends Room {
         }
     }
 
+    public synchronized void doFlip(ServerThread Client, String s) throws IOException{
+        
+
+    }
+
     public synchronized void doTurn(ServerThread client) {
         if (currentPhase != Phase.TURN) {
             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You can't do turns just yet");
@@ -132,33 +134,6 @@ public class GameRoom extends Room {
 
     }
     // end serverthread interactions
-    public void draw(ServerThread client) {
-        long clientId = client.getClientId();
-        players.forEach((key, value) -> {
-            // Call your method here, passing the value
-            if (clientId == value.getClientId()) {
-                value.getHand().addToHand(deck.draw());
-                value.getHand().toString();
-            }
-        });
-    }
-
-    public void request(ServerThread client, GoFishPayload p){
-        Player player = players.get(client.getClientId());
-        Player target = p.getTarget();
-        player.getHand().addToHand(target.getHand().removeCards(p.getRequestedCard()));
-        
-        /*
-        long clientId = client.getClientId();
-        players.forEach((key, value) -> {
-            // Call your method here, passing the value
-            if (clientId == value.getClientId()) {
-                ClientPlayer target = p.getTarget();
-                value.getHand().addToHand(target.getHand().removeCards(p.getRequestedCard()));
-            }
-        });
-        */
-    }
 
     private synchronized void readyCheck() {
 
@@ -203,15 +178,6 @@ public class GameRoom extends Room {
             return;
         }
         canEndSession = false;
-
-        // am3485
-        deck.shuffle();
-        players.forEach((key, value) -> {
-            // Call your method here, passing the value
-            value.getHand().setHand(deck.draw(), deck.draw(), deck.draw(), deck.draw(), deck.draw());
-        });
-        // am3485
-
         changePhase(Phase.TURN);
         numActivePlayers = players.values().stream().filter(ServerPlayer::isReady).count();
         setupTurns();
@@ -307,10 +273,6 @@ public class GameRoom extends Room {
         sendResetLocalTurns();
     }
 
-    
-
-    
-
     private void end() {
         System.out.println(TextFX.colorize("Doing game over", Color.YELLOW));
         turnOrder.clear();
@@ -363,7 +325,6 @@ public class GameRoom extends Room {
             sp.sendPlayerTurnStatus(isp.getClientId(), isp.didTakeTurn());
         }
     }
-
     private void syncCurrentPhase() {
         Iterator<ServerPlayer> iter = players.values().iterator();
         while (iter.hasNext()) {

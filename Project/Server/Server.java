@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import Project.Common.Constants;
@@ -212,7 +211,7 @@ public enum Server {
      */
     protected synchronized void broadcast(String message) {
         if (processCommand(message)) {
-
+            
             return;
         }
         // loop over rooms and send out the message
@@ -244,6 +243,4 @@ public enum Server {
         server.start(port);
         Server.INSTANCE.logger.info("Server Stopped");
     }
-
-
 }
