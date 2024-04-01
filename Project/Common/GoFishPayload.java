@@ -6,11 +6,12 @@ public class GoFishPayload extends Payload {
     private String action;
     private Hand cardList;
     private String pointList;
+    private String target; 
 
-
-    public GoFishPayload(String a, Hand c){
+    public GoFishPayload(String a, Hand c, String t){
         action = a;
         cardList = c;
+        target = t;
     }
     
     public String getAction() {
@@ -37,11 +38,17 @@ public class GoFishPayload extends Payload {
         this.cardList = cardList;
     }
 
-    
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
 
     @Override
     public String toString() {
-        return String.format("Action[%s], CardList[%s], Points[%s]", 
-                getAction(), getCardList(), getPointList());
+        return String.format("Action[%s], Card List[%s], Target[%s], Points[%s]", 
+                getAction(), getCardList(), getTarget(), getPointList());
     }
 }

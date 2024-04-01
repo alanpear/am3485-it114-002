@@ -14,6 +14,9 @@ import Project.Common.TextFX;
 import Project.Common.TimedEvent;
 import Project.Common.TextFX.Color;
 
+import Project.Server.Deck; //am3485
+import Project.Common.GoFishPayload;
+
 public class GameRoom extends Room {
 
     private ConcurrentHashMap<Long, ServerPlayer> players = new ConcurrentHashMap<Long, ServerPlayer>();
@@ -25,6 +28,10 @@ public class GameRoom extends Room {
     private boolean canEndSession = false;
     private ServerPlayer currentPlayer = null;
     private List<Long> turnOrder = new ArrayList<Long>();
+    
+    
+    Deck deck = new Deck(); //am3485
+
 
     public GameRoom(String name) {
         super(name);
@@ -37,7 +44,6 @@ public class GameRoom extends Room {
             ServerPlayer sp = new ServerPlayer(client);
             players.put(client.getClientId(), sp);
             System.out.println(TextFX.colorize(client.getClientName() + " join GameRoom " + getName(), Color.WHITE));
-
             // sync game state
 
             // sync phase
@@ -50,6 +56,7 @@ public class GameRoom extends Room {
             if (currentPlayer != null) {
                 sp.sendCurrentPlayerTurn(currentPlayer.getClientId());
             }
+
 
         }
     }
@@ -170,6 +177,15 @@ public class GameRoom extends Room {
             return;
         }
         canEndSession = false;
+        
+        //am3485
+        deck.shuffle();
+        players.forEach((key, value) -> {
+            // Call your method here, passing the value
+            value.getHand().setHand(deck.draw(), deck.draw(), deck.draw(), deck.draw(), deck.draw());
+        });
+        //am3485
+
         changePhase(Phase.TURN);
         numActivePlayers = players.values().stream().filter(ServerPlayer::isReady).count();
         setupTurns();

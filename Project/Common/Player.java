@@ -6,11 +6,14 @@ package Project.Common;
  */
 public class Player {
     private boolean isReady;
+    
+    //am3485
     private Hand hand;
 
     public Player(){
         hand = new Hand();
     }
+    //edit
 
     public boolean isReady() {
         return isReady;
@@ -19,6 +22,7 @@ public class Player {
     public Hand getHand(){
         return this.hand;
     }
+    //edit
 
     public void setReady(boolean isReady) {
         this.isReady = isReady;
