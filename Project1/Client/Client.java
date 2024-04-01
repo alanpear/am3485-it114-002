@@ -1,28 +1,29 @@
-package Project.Client;
+package Project1.Client;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Arrays;
+
 import java.util.List;
-import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import Project.Common.ConnectionPayload;
-import Project.Common.Constants;
-import Project.Common.GoFishPayload;
-import Project.Common.Payload;
-import Project.Common.PayloadType;
-import Project.Common.Phase;
-import Project.Common.ReadyPayload;
-import Project.Common.RoomResultsPayload;
-import Project.Common.TextFX;
-import Project.Common.TurnStatusPayload;
-import Project.Common.TextFX.Color;
+import Project1.Common.ConnectionPayload;
+import Project1.Common.Constants;
+import Project1.Common.FlipPayload;
+import Project1.Common.Payload;
+import Project1.Common.PayloadType;
+import Project1.Common.Phase;
+import Project1.Common.ReadyPayload;
+import Project1.Common.RollPayload;
+import Project1.Common.RoomResultsPayload;
+import Project1.Common.TextFX;
+import Project1.Common.TurnStatusPayload;
+import Project1.Common.TextFX.Color;
 
 public enum Client {
     INSTANCE;
@@ -45,9 +46,8 @@ public enum Client {
     private static final String READY_CHECK = "/ready";
     private static final String SIMULATE_TURN = "/turn";
 
-    // am3485
-    private static final String DRAW = "/draw";
-    private static final String REQUEST = "/request";
+    private static final String ROLL = "/roll";
+    private static final String FLIP = "/flip";
 
     // client id, is the key, client name is the value
     // private ConcurrentHashMap<Long, String> clientsInRoom = new
@@ -219,36 +219,23 @@ public enum Client {
                 e.printStackTrace();
             }
             return true;
-        } else if (text.startsWith(DRAW)) {
+        } else if (text.startsWith(ROLL)) {
             try {
-                sendDraw();
-            } catch (IOException e) {
+                String searchQuery = text.replace(ROLL, "").trim();
+                sendRoll(searchQuery);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return true;
-        } else if (text.startsWith(REQUEST)) {
+        } else if (text.startsWith(FLIP)) {
             try {
-                String[] parts = text.trim().replaceAll(" +", " ").split(" ");
-                
-                ClientPlayer match = findMatch(clientsInRoom, parts[1]);
-                // /request target card#
-                sendRequest(parts[2], match);
-                
+                sendFlip();
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return true;
         }
         return false;
-    }
-
-    private ClientPlayer findMatch(Map<Long, ClientPlayer> clientsInRoom, String playerName) {
-        for (ClientPlayer player : clientsInRoom.values()) {
-            if (player.getClientName().equalsIgnoreCase(playerName)) {
-                return player;
-            }
-        }
-        return null; // Return null if no match is found
     }
 
     // Send methods
@@ -259,21 +246,60 @@ public enum Client {
         out.writeObject(p);
     }
 
-    private void sendDraw() throws IOException {
-        // am3485
-        Payload p = new GoFishPayload();
-        p.setPayloadType(PayloadType.DRAW);
+    private void sendFlip() throws IOException {
+        Random gen = new Random();
+        FlipPayload p = new FlipPayload();
+        int c = gen.nextInt(1000) % 2;
+        if (c == 1) {
+            System.out.println("Heads");
+            p.setResult("Heads");
+        } else {
+            System.out.println("Tails");
+            p.setResult("Tails");
+        }
+
+        p.setPayloadType(PayloadType.FLIP);
         out.writeObject(p);
+
     }
 
-    private void sendRequest(String cardList, ClientPlayer targetUser) throws IOException {
-        // am3485
-        Payload p = new GoFishPayload(cardList, targetUser);
-        p.setPayloadType(PayloadType.REQUEST_CARD);
-        out.writeObject(p);
+    private void sendRoll(String text) throws IOException {
+        Random gen = new Random();
+        if (text.toLowerCase().contains("d")) {
+            try {
+                String[] diceNumbers = text.split("[dD]"); // 0 index is the amount and 1st index is max
+                int counter = 0;
+                for (int i = 0; i < Integer.parseInt(diceNumbers[0]); i++) {
+                    counter += gen.nextInt(Integer.parseInt(diceNumbers[1])) + 1;
+                }
+                System.out.println(counter);
+                RollPayload p = new RollPayload();
+                p.setPayloadType(PayloadType.ROLL);
+                p.setNumSides(Integer.parseInt(diceNumbers[1]));
+                p.setNumDice(Integer.parseInt(diceNumbers[0]));
+                p.setResults(counter);
+                out.writeObject(p);
+            } catch (Exception e) {
+                System.out.println("invalid!!!!");
+            }
+
+        } else if (!text.toLowerCase().contains("d") && text.matches("\\d+")) {// Checks if it doesn't contain a "d" AND
+                                                                               // if there are only digits in the string
+            // Parses the text to a number
+            int maxRoll = Integer.parseInt(text);
+            // Use gen object to make a random number
+            int counter = gen.nextInt(maxRoll) + 1;
+            System.out.println(counter);
+            RollPayload p = new RollPayload();
+            p.setPayloadType(PayloadType.ROLL);
+            p.setNumSides(maxRoll);
+            p.setResults(counter);
+            out.writeObject(p);
+        } else {
+            // At this point it would be invalid so do something with it
+            return;
+        }
     }
-
-
 
     private void sendReadyCheck() throws IOException {
         ReadyPayload rp = new ReadyPayload();
@@ -535,6 +561,14 @@ public enum Client {
                                 TextFX.colorize(String.format("It's %s's turn", c.getClientName()), Color.PURPLE));
                     }
                 });
+                break;
+            case FLIP:
+                try {
+                    FlipPayload fp = (FlipPayload) p;
+                    fp.toString();
+                } catch (Exception e) {
+                    
+                }
                 break;
             // case END_SESSION: //clearing all local player data
             default:
