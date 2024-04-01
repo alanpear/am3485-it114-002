@@ -177,6 +177,7 @@ public class Room implements AutoCloseable {
         info("Sending message to " + clients.size() + " clients");
         if (sender != null && processCommands(message, sender)) {
             // it was a command, don't broadcast
+            
             return;
         }
 

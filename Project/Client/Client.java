@@ -5,14 +5,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
+import Project.Common.GoFishPayload;
 import Project.Common.Payload;
 import Project.Common.PayloadType;
 import Project.Common.Phase;
@@ -43,6 +45,10 @@ public enum Client {
     private static final String READY_CHECK = "/ready";
     private static final String SIMULATE_TURN = "/turn";
 
+    // am3485
+    private static final String DRAW = "/draw";
+    private static final String REQUEST = "/request";
+
     // client id, is the key, client name is the value
     // private ConcurrentHashMap<Long, String> clientsInRoom = new
     // ConcurrentHashMap<Long, String>();
@@ -50,7 +56,6 @@ public enum Client {
     private long myClientId = Constants.DEFAULT_CLIENT_ID;
     private Logger logger = Logger.getLogger(Client.class.getName());
     private Phase currentPhase = Phase.READY;
-
 
     public boolean isConnected() {
         if (server == null) {
@@ -193,33 +198,56 @@ public enum Client {
                         Color.CYAN));
             }));
             return true;
-        }
-        else if (text.equalsIgnoreCase(DISCONNECT)) {
+        } else if (text.equalsIgnoreCase(DISCONNECT)) {
             try {
                 sendDisconnect();
-            }
-            catch(Exception e){
-              e.printStackTrace(); 
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             return true;
-        }
-        else if (text.equalsIgnoreCase(READY_CHECK)) {
+        } else if (text.equalsIgnoreCase(READY_CHECK)) {
             try {
                 sendReadyCheck();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             return true;
-        }
-        else if (text.equalsIgnoreCase(SIMULATE_TURN)) {
+        } else if (text.equalsIgnoreCase(SIMULATE_TURN)) {
             try {
                 sendTakeTurn();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             return true;
+        } else if (text.startsWith(DRAW)) {
+            try {
+                sendDraw();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return true;
+        } else if (text.startsWith(REQUEST)) {
+            try {
+                String[] parts = text.trim().replaceAll(" +", " ").split(" ");
+                
+                ClientPlayer match = findMatch(clientsInRoom, parts[1]);
+                // /request target card#
+                sendRequest(parts[1], parts[2], match);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return true;
         }
         return false;
+    }
+
+    private ClientPlayer findMatch(Map<Long, ClientPlayer> clientsInRoom, String playerName) {
+        for (ClientPlayer player : clientsInRoom.values()) {
+            if (player.getClientName().equalsIgnoreCase(playerName)) {
+                return player;
+            }
+        }
+        return null; // Return null if no match is found
     }
 
     // Send methods
@@ -229,15 +257,32 @@ public enum Client {
         p.setPayloadType(PayloadType.TURN);
         out.writeObject(p);
     }
+
+    private void sendDraw() throws IOException {
+        // am3485
+        GoFishPayload p = new GoFishPayload();
+        p.setPayloadType(PayloadType.DRAW);
+        out.writeObject(p);
+    }
+
+    private void sendRequest(String target, String cardList, ClientPlayer targetUser) throws IOException {
+        // am3485
+        GoFishPayload p = new GoFishPayload(target, cardList, targetUser);
+        p.setPayloadType(PayloadType.REQUEST_CARD);
+        out.writeObject(p);
+    }
+
     private void sendReadyCheck() throws IOException {
         ReadyPayload rp = new ReadyPayload();
         out.writeObject(rp);
     }
+
     private void sendDisconnect() throws IOException {
         ConnectionPayload cp = new ConnectionPayload();
         cp.setPayloadType(PayloadType.DISCONNECT);
         out.writeObject(cp);
     }
+
     private void sendCreateRoom(String roomName) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.CREATE_ROOM);
@@ -372,6 +417,7 @@ public enum Client {
         }
         return "[name not found]";
     }
+
     /**
      * Used to process payloads from the server-side and handle their data
      * 

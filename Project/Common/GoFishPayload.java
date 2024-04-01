@@ -1,25 +1,36 @@
 package Project.Common;
 
+import Project.Client.ClientPlayer;
 import Project.Client.Hand;
 
 public class GoFishPayload extends Payload {
-    private String action;
+    
     private Hand cardList;
     private String pointList;
     private String target; 
+    private String requestedCard;
+    private ClientPlayer match;
 
-    public GoFishPayload(String a, Hand c, String t){
-        action = a;
+    public GoFishPayload(Hand c, String t){
         cardList = c;
         target = t;
     }
     
-    public String getAction() {
-        return action;
+    public GoFishPayload(String t, String c, ClientPlayer p){
+        target = t;
+        requestedCard = c;
+        match = p;
     }
 
-    public void setAction(String action) {
-        this.action = action;
+    public GoFishPayload(){
+    }
+
+    public String getRequestedCard() {
+        return requestedCard;
+    }
+
+    public void setRequestedCard(String requestedCard) {
+        this.requestedCard = requestedCard;
     }
 
     public String getPointList() {
@@ -48,7 +59,7 @@ public class GoFishPayload extends Payload {
 
     @Override
     public String toString() {
-        return String.format("Action[%s], Card List[%s], Target[%s], Points[%s]", 
-                getAction(), getCardList(), getTarget(), getPointList());
+        return super.toString() + String.format(", Card List[%s], Target[%s], Points[%s]", 
+                 getCardList(), getTarget(), getPointList());
     }
 }
