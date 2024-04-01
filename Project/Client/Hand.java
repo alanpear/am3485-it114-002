@@ -27,11 +27,15 @@ public class Hand {
         hand.add(card);
     }
 
+    public void addToHand(List<String> cards){
+        hand.addAll(cards);
+    }
+
     public List<String> removeCards(String requestedCard){
         List<String> removedCards = new ArrayList<String>();
         
         for(String card: hand){
-         if (card.equalsIgnoreCase(requestedCard)) {
+         if (card.startsWith(requestedCard)) {
                         // If present, remove the card from the hand and store it in a variable
                         removedCards.add(hand.remove(hand.indexOf(requestedCard)));
                         System.out.println("Removed card: " + card);

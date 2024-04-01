@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import Project.Client.ClientPlayer;
 import Project.Common.Constants;
 import Project.Common.Phase;
 import Project.Common.TextFX;
@@ -130,6 +131,28 @@ public class GameRoom extends Room {
 
     }
     // end serverthread interactions
+    public void draw(ServerThread client) {
+        long clientId = client.getClientId();
+        players.forEach((key, value) -> {
+            // Call your method here, passing the value
+            if (clientId == value.getClientId()) {
+                value.getHand().addToHand(deck.draw());
+                value.getHand().toString();
+            }
+        });
+    }
+
+    public void request(ServerThread client, GoFishPayload p){
+        long clientId = client.getClientId();
+        players.forEach((key, value) -> {
+            // Call your method here, passing the value
+            if (clientId == value.getClientId()) {
+                ClientPlayer target = p.getTarget();
+                System.out.println("this is in game room " + target);
+                value.getHand().addToHand(target.getHand().removeCards(p.getRequestedCard()));
+            }
+        });
+    }
 
     private synchronized void readyCheck() {
 
@@ -278,36 +301,9 @@ public class GameRoom extends Room {
         sendResetLocalTurns();
     }
 
-    public void draw(String m, ServerThread client) {
-        long clientId = client.getClientId();
-        players.forEach((key, value) -> {
-            // Call your method here, passing the value
-            if (clientId == value.getClientId()) {
-                value.getHand().addToHand(deck.draw());
-                value.getHand().toString();
-            }
-        });
-    }
+    
 
-    public void requestCard(String m, ServerThread client) {
-        /*long clientId = client.getClientId();
-        long matchId;
-        players.forEach((key, value) -> {
-            // Call your method here, passing the value
-            String[] parts = m.split(" ");
-            if (value.getClientName() == parts[0]) {
-                //matchId = value.getClientId();
-            }
-            if (clientId == value.getClientId()) {
-
-                value.getHand();
-            }
-            
-
-
-        });
-        */
-    }
+    
 
     private void end() {
         System.out.println(TextFX.colorize("Doing game over", Color.YELLOW));

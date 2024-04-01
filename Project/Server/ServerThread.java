@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
+import Project.Common.GoFishPayload;
 import Project.Common.Payload;
 import Project.Common.PayloadType;
 import Project.Common.ReadyPayload;
@@ -301,20 +302,24 @@ public class ServerThread extends Thread {
                 break;
             case DRAW:
                 try {
-                    ((GameRoom) currentRoom).draw(p.getMessage(), this);
+                    ((GameRoom) currentRoom).draw(this);
                 } catch (Exception e) {
                     e.printStackTrace();
                     this.sendMessage(Constants.DEFAULT_CLIENT_ID,
                             "You can only use the /turn commmand in a GameRoom and not the Lobby");
                 }
+                break;
             case REQUEST_CARD:
                 try {
-                    ((GameRoom) currentRoom).requestCard(p.getMessage(), this);
+                    System.out.println("this is in server thread " + p);
+                    GoFishPayload gp = (GoFishPayload) p;
+                    ((GameRoom) currentRoom).request(this, gp);
                 } catch (Exception e) {
                     e.printStackTrace();
                     this.sendMessage(Constants.DEFAULT_CLIENT_ID,
                             "You can only use the /turn commmand in a GameRoom and not the Lobby");
                 }
+                break;
             default:
                 break;
 

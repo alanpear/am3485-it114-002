@@ -7,19 +7,21 @@ public class GoFishPayload extends Payload {
     
     private Hand cardList;
     private String pointList;
-    private String target; 
+    private ClientPlayer target; 
     private String requestedCard;
     private ClientPlayer match;
 
-    public GoFishPayload(Hand c, String t){
-        cardList = c;
-        target = t;
-    }
     
-    public GoFishPayload(String t, String c, ClientPlayer p){
+    
+    public GoFishPayload(ClientPlayer t, String c, ClientPlayer p){
         target = t;
         requestedCard = c;
         match = p;
+    }
+    
+    public GoFishPayload(String c, ClientPlayer p){
+        target = p;
+        requestedCard = c;
     }
 
     public GoFishPayload(){
@@ -49,11 +51,11 @@ public class GoFishPayload extends Payload {
         this.cardList = cardList;
     }
 
-    public String getTarget() {
+    public ClientPlayer getTarget() {
         return target;
     }
 
-    public void setTarget(String target) {
+    public void setTarget(ClientPlayer target) {
         this.target = target;
     }
 

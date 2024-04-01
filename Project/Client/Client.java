@@ -232,7 +232,7 @@ public enum Client {
                 
                 ClientPlayer match = findMatch(clientsInRoom, parts[1]);
                 // /request target card#
-                sendRequest(parts[1], parts[2], match, text);
+                sendRequest(parts[2], match);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -260,16 +260,15 @@ public enum Client {
 
     private void sendDraw() throws IOException {
         // am3485
-        GoFishPayload p = new GoFishPayload();
+        Payload p = new GoFishPayload();
         p.setPayloadType(PayloadType.DRAW);
         out.writeObject(p);
     }
 
-    private void sendRequest(String target, String cardList, ClientPlayer targetUser, String text) throws IOException {
+    private void sendRequest(String cardList, ClientPlayer targetUser) throws IOException {
         // am3485
-        GoFishPayload p = new GoFishPayload(target, cardList, targetUser);
+        Payload p = new GoFishPayload(cardList, targetUser);
         p.setPayloadType(PayloadType.REQUEST_CARD);
-        p.setMessage(text.replaceAll(REQUEST, ""));
         out.writeObject(p);
     }
 
