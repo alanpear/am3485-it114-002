@@ -12,6 +12,7 @@ public abstract class TextFX {
         PURPLE("\033[0;35m"),
         CYAN("\033[0;36m"),
         WHITE("\033[0;37m");
+        
 
         private final String code;
 
@@ -25,6 +26,9 @@ public abstract class TextFX {
     }
 
     public static final String RESET = "\033[0m";
+    public static final String BOLD = "\033[1m";
+    public static final String ITALIC = "\033[3m";
+    public static final String UNDERLINE = "\033[4m";
 
     /**
      * Generates a String with the original message wrapped in the ASCII of the
@@ -39,6 +43,30 @@ public abstract class TextFX {
     public static String colorize(String text, Color color) {
         StringBuilder builder = new StringBuilder();
         builder.append(color.getCode());
+        builder.append(text);
+        builder.append(RESET);
+        return builder.toString();
+    }
+
+    public static String embolden(String text) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(BOLD);
+        builder.append(text);
+        builder.append(RESET);
+        return builder.toString();
+    }
+
+    public static String underline(String text) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(UNDERLINE);
+        builder.append(text);
+        builder.append(RESET);
+        return builder.toString();
+    }
+
+    public static String italize(String text) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(ITALIC);
         builder.append(text);
         builder.append(RESET);
         return builder.toString();

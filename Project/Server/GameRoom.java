@@ -82,7 +82,11 @@ public class GameRoom extends Room {
             players.get(playerId).setReady(true);// <-- simply sets the ready state to true
             syncReadyState(players.get(playerId));
             System.out.println(TextFX.colorize(players.get(playerId).getClientName() + " marked themselves as ready ",
-                    Color.YELLOW));
+                    Color.YELLOW)); //am3485 4/3/2024
+            System.out.println(TextFX.underline(players.get(playerId).getClientName() + " marked themselves as ready "));
+            System.out.println(TextFX.italize(players.get(playerId).getClientName() + " marked themselves as ready "));
+            System.out.println(TextFX.embolden(players.get(playerId).getClientName() + " marked themselves as ready "));
+            System.out.println(TextFX.colorize(TextFX.embolden(players.get(playerId).getClientName() + " marked themselves as ready "), Color.PURPLE));
             readyCheck();
         } else {
             System.err.println(TextFX.colorize("Player doesn't exist: " + client.getClientName(), Color.RED));
