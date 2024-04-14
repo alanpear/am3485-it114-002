@@ -57,6 +57,9 @@ public enum Client {
     private Logger logger = Logger.getLogger(Client.class.getName());
     private Phase currentPhase = Phase.READY;
 
+    // callback that updates the UI
+    private static IClientEvents events;
+
     public boolean isConnected() {
         if (server == null) {
             return false;
@@ -68,7 +71,8 @@ public enum Client {
         return server.isConnected() && !server.isClosed() && !server.isInputShutdown() && !server.isOutputShutdown();
 
     }
-
+    
+    
     /**
      * Takes an ip address and a port to attempt a socket connection to a server.
      * 
@@ -76,6 +80,7 @@ public enum Client {
      * @param port
      * @return true if connection was successful
      */
+    @Deprecated
     private boolean connect(String address, int port) {
         try {
             server = new Socket(address, port);
@@ -84,7 +89,36 @@ public enum Client {
             // channel to listen to server
             in = new ObjectInputStream(server.getInputStream());
             logger.info("Client connected");
-            listenForServerMessage();
+            listenForServerPayload();
+            sendConnect();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return isConnected();
+    }
+
+        /**
+     * Takes an ip address and a port to attempt a socket connection to a server.
+     * 
+     * @param address
+     * @param port
+     * @param username
+     * @param callback (for triggering UI events)
+     * @return true if connection was successful
+     */
+    public boolean connect(String address, int port, String username, IClientEvents callback) {
+        clientName = username;
+        Client.events = callback;
+        try {
+            server = new Socket(address, port);
+            // channel to send to server
+            out = new ObjectOutputStream(server.getOutputStream());
+            // channel to listen to server
+            in = new ObjectInputStream(server.getInputStream());
+            logger.info("Client connected");
+            listenForServerPayload();
             sendConnect();
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -301,32 +335,32 @@ public enum Client {
         }
     }
 
-    private void sendReadyCheck() throws IOException {
+    public void sendReadyCheck() throws IOException {
         ReadyPayload rp = new ReadyPayload();
         out.writeObject(rp);
     }
 
-    private void sendDisconnect() throws IOException {
+    public void sendDisconnect() throws IOException {
         ConnectionPayload cp = new ConnectionPayload();
         cp.setPayloadType(PayloadType.DISCONNECT);
         out.writeObject(cp);
     }
 
-    private void sendCreateRoom(String roomName) throws IOException {
+    public void sendCreateRoom(String roomName) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.CREATE_ROOM);
         p.setMessage(roomName);
         out.writeObject(p);
     }
 
-    private void sendJoinRoom(String roomName) throws IOException {
+    public void sendJoinRoom(String roomName) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.JOIN_ROOM);
         p.setMessage(roomName);
         out.writeObject(p);
     }
 
-    private void sendListRooms(String searchString) throws IOException {
+    public void sendListRooms(String searchString) throws IOException {
         // Updated after video to use RoomResultsPayload so we can (later) use a limit
         // value
         RoomResultsPayload p = new RoomResultsPayload();
@@ -342,7 +376,7 @@ public enum Client {
         out.writeObject(p);
     }
 
-    private void sendMessage(String message) throws IOException {
+    public void sendMessage(String message) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.MESSAGE);
         p.setMessage(message);
@@ -388,6 +422,38 @@ public enum Client {
             }
         };
         inputThread.start();
+    }
+
+    private void listenForServerPayload() {
+        fromServerThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Payload fromServer;
+
+                    // while we're connected, listen for strings from server
+                    while (!server.isClosed() && !server.isInputShutdown()
+                            && (fromServer = (Payload) in.readObject()) != null) {
+
+                        logger.info("Debug Info: " + fromServer);
+                        processPayload(fromServer);
+
+                    }
+                    logger.info("Loop exited");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (!server.isClosed()) {
+                        logger.severe("Server closed connection");
+                    } else {
+                        logger.severe("Connection closed");
+                    }
+                } finally {
+                    close();
+                    logger.info("Stopped listening to server input");
+                }
+            }
+        };
+        fromServerThread.start();// start the thread
     }
 
     private void listenForServerMessage() {
@@ -437,7 +503,7 @@ public enum Client {
         }
     }
 
-    private String getClientNameFromId(long id) {
+    public String getClientNameFromId(long id) {
         if (clientsInRoom.containsKey(id)) {
             return clientsInRoom.get(id).getClientName();
         }
