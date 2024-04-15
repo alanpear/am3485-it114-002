@@ -17,8 +17,13 @@ public class FlipPayload extends Payload {
 
     @Override
     public String toString() {
-        return String.format("Type[%s], Result[%s], ClientId[%s], ", getPayloadType().toString(),
+        return String.format("Type[%s], Result[%s], ClientId[%s] ", getPayloadType().toString(),
                 getResult(), getClientId());
+    }
+
+    public String lolString() {
+        return String.format("Type[%s], Result[%s] ", getPayloadType().toString(),
+                getResult());
     }
 }
 //am3485 4/1/2024

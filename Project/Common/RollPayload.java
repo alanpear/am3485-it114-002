@@ -4,6 +4,17 @@ public class RollPayload extends Payload {
     private int numDice;
     private int numSides;
     private int results;
+    
+    //am3485 4/15/24
+    private String rollPrompt;
+    public String getRollPrompt() {
+        return rollPrompt;
+    }
+
+    public void setRollPrompt(String rollPrompt) {
+        this.rollPrompt = rollPrompt;
+    }
+
     //am3485 4/1/2024
     public RollPayload() {
         setPayloadType(PayloadType.ROLL);
@@ -35,7 +46,13 @@ public class RollPayload extends Payload {
 
     @Override
     public String toString() {
-        return String.format("Type[%s], Result[%s], ClientId[%s], ", getPayloadType().toString(),
+        return String.format("Type[%s], Result[%s], ClientId[%s] ", getPayloadType().toString(),
                 getResults(), getClientId());
+    }
+
+    //am3485 4/15/2024
+    public String lolString() {
+        return String.format("Type[%s], Roll Prompt[%s], Result[%s] ", getPayloadType().toString(),
+                getRollPrompt(), getResults());
     }
 }

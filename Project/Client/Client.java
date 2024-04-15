@@ -279,7 +279,7 @@ public enum Client {
         out.writeObject(p);
     }
 
-    private void sendFlip() throws IOException {
+    public void sendFlip() throws IOException {
         Random gen = new Random();
         FlipPayload p = new FlipPayload();
         int c = gen.nextInt(1000) % 2;
@@ -290,13 +290,13 @@ public enum Client {
             System.out.println("Tails");
             p.setResult("Tails");
         }
-
+        
         p.setPayloadType(PayloadType.FLIP);
         out.writeObject(p);
 
     }
 
-    private void sendRoll(String text) throws IOException {
+    public void sendRoll(String text) throws IOException {
         Random gen = new Random();
         if (text.toLowerCase().contains("d")) {
             try {
@@ -310,6 +310,7 @@ public enum Client {
                 p.setPayloadType(PayloadType.ROLL);
                 p.setNumSides(Integer.parseInt(diceNumbers[1]));
                 p.setNumDice(Integer.parseInt(diceNumbers[0]));
+                p.setRollPrompt(text);//am3485 4/15/24
                 p.setResults(counter);
                 out.writeObject(p);
             } catch (Exception e) {
@@ -327,6 +328,7 @@ public enum Client {
             p.setPayloadType(PayloadType.ROLL);
             p.setNumSides(maxRoll);
             p.setResults(counter);
+            p.setRollPrompt(text);//am3485 4/15/24
             out.writeObject(p);
         } else {
             // At this point it would be invalid so do something with it
@@ -646,6 +648,20 @@ public enum Client {
                 try {
                     FlipPayload fp = (FlipPayload) p;
                     fp.toString();
+
+                    
+                    break;
+                } catch (Exception e) {
+
+                }
+                break;
+                case ROLL:
+                try {
+                    RollPayload rp = (RollPayload) p;
+                    rp.toString();
+
+                    
+                    break;
                 } catch (Exception e) {
 
                 }
