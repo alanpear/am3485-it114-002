@@ -5,7 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -57,9 +57,6 @@ public enum Client {
     private Logger logger = Logger.getLogger(Client.class.getName());
     private Phase currentPhase = Phase.READY;
 
-    // callback that updates the UI
-    private static IClientEvents events;
-
     public boolean isConnected() {
         if (server == null) {
             return false;
@@ -71,8 +68,7 @@ public enum Client {
         return server.isConnected() && !server.isClosed() && !server.isInputShutdown() && !server.isOutputShutdown();
 
     }
-    
-    
+
     /**
      * Takes an ip address and a port to attempt a socket connection to a server.
      * 
@@ -99,7 +95,7 @@ public enum Client {
         return isConnected();
     }
 
-        /**
+    /**
      * Takes an ip address and a port to attempt a socket connection to a server.
      * 
      * @param address
@@ -153,6 +149,9 @@ public enum Client {
     private boolean isQuit(String text) {
         return text.equalsIgnoreCase("/quit");
     }
+
+    // callback that updates the UI
+    private static IClientEvents events;
 
     private boolean isName(String text) {
         if (text.startsWith("/name")) {
@@ -254,7 +253,7 @@ public enum Client {
             }
             return true;
         } else if (text.startsWith(ROLL)) {
-            try { //am3485 4/1/2024
+            try { // am3485 4/1/2024
                 String searchQuery = text.replace(ROLL, "").trim();
                 sendRoll(searchQuery);
             } catch (Exception e) {
@@ -262,7 +261,7 @@ public enum Client {
             }
             return true;
         } else if (text.startsWith(FLIP)) {
-            try { //am3485 4/1/2024
+            try { // am3485 4/1/2024
                 sendFlip();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -284,7 +283,7 @@ public enum Client {
         Random gen = new Random();
         FlipPayload p = new FlipPayload();
         int c = gen.nextInt(1000) % 2;
-        if (c == 1) {//am3485 4/1/2024
+        if (c == 1) {// am3485 4/1/2024
             System.out.println("Heads");
             p.setResult("Heads");
         } else {
@@ -316,7 +315,7 @@ public enum Client {
             } catch (Exception e) {
                 System.out.println("invalid!!!!");
             }
-            //am3485 4/1/2024
+            // am3485 4/1/2024
         } else if (!text.toLowerCase().contains("d") && text.matches("\\d+")) {// Checks if it doesn't contain a "d" AND
                                                                                // if there are only digits in the string
             // Parses the text to a number
@@ -529,8 +528,10 @@ public enum Client {
                 } else {
                     logger.info(TextFX.colorize("Setting client id to default", Color.RED));
                 }
+                events.onReceiveClientId(p.getClientId());
                 break;
             case CONNECT:// for now connect,disconnect are all the same
+
             case DISCONNECT:
                 ConnectionPayload cp = (ConnectionPayload) p;
                 message = TextFX.colorize(String.format("*%s %s*",
@@ -541,13 +542,24 @@ public enum Client {
                 ConnectionPayload cp2 = (ConnectionPayload) p;
                 if (cp2.getPayloadType() == PayloadType.CONNECT || cp2.getPayloadType() == PayloadType.SYNC_CLIENT) {
                     addClientReference(cp2.getClientId(), cp2.getClientName());
+
                 } else if (cp2.getPayloadType() == PayloadType.DISCONNECT) {
                     removeClientReference(cp2.getClientId());
+                }
+                // TODO refactor this to avoid all these messy if condition (resulted from poor
+                // planning ahead)
+                if (cp2.getPayloadType() == PayloadType.CONNECT) {
+                    events.onClientConnect(p.getClientId(), cp2.getClientName(), p.getMessage());
+                } else if (cp2.getPayloadType() == PayloadType.DISCONNECT) {
+                    events.onClientDisconnect(p.getClientId(), cp2.getClientName(), p.getMessage());
+                } else if (cp2.getPayloadType() == PayloadType.SYNC_CLIENT) {
+                    events.onSyncClient(p.getClientId(), cp2.getClientName());
                 }
 
                 break;
             case JOIN_ROOM:
                 clientsInRoom.clear();// we changed a room so likely need to clear the list
+                events.onResetUserList();
                 break;
             case MESSAGE:
 
@@ -555,6 +567,7 @@ public enum Client {
                         getClientNameFromId(p.getClientId()),
                         p.getMessage()), Color.BLUE);
                 System.out.println(message);
+                events.onMessageReceive(p.getClientId(), p.getMessage());
                 break;
             case LIST_ROOMS:
                 try {
@@ -571,6 +584,7 @@ public enum Client {
                         String msg = String.format("%s %s", (i + 1), rooms.get(i));
                         System.out.println(TextFX.colorize(msg, Color.CYAN));
                     }
+                    events.onReceiveRoomList(rp.getRooms(), rp.getMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -633,7 +647,7 @@ public enum Client {
                     FlipPayload fp = (FlipPayload) p;
                     fp.toString();
                 } catch (Exception e) {
-                    
+
                 }
                 break;
             // case END_SESSION: //clearing all local player data
