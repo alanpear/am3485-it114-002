@@ -5,7 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -76,6 +76,7 @@ public enum Client {
      * @param port
      * @return true if connection was successful
      */
+    @Deprecated
     private boolean connect(String address, int port) {
         try {
             server = new Socket(address, port);
@@ -84,7 +85,36 @@ public enum Client {
             // channel to listen to server
             in = new ObjectInputStream(server.getInputStream());
             logger.info("Client connected");
-            listenForServerMessage();
+            listenForServerPayload();
+            sendConnect();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return isConnected();
+    }
+
+    /**
+     * Takes an ip address and a port to attempt a socket connection to a server.
+     * 
+     * @param address
+     * @param port
+     * @param username
+     * @param callback (for triggering UI events)
+     * @return true if connection was successful
+     */
+    public boolean connect(String address, int port, String username, IClientEvents callback) {
+        clientName = username;
+        Client.events = callback;
+        try {
+            server = new Socket(address, port);
+            // channel to send to server
+            out = new ObjectOutputStream(server.getOutputStream());
+            // channel to listen to server
+            in = new ObjectInputStream(server.getInputStream());
+            logger.info("Client connected");
+            listenForServerPayload();
             sendConnect();
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -119,6 +149,9 @@ public enum Client {
     private boolean isQuit(String text) {
         return text.equalsIgnoreCase("/quit");
     }
+
+    // callback that updates the UI
+    private static IClientEvents events;
 
     private boolean isName(String text) {
         if (text.startsWith("/name")) {
@@ -220,7 +253,7 @@ public enum Client {
             }
             return true;
         } else if (text.startsWith(ROLL)) {
-            try { //am3485 4/1/2024
+            try { // am3485 4/1/2024
                 String searchQuery = text.replace(ROLL, "").trim();
                 sendRoll(searchQuery);
             } catch (Exception e) {
@@ -228,7 +261,7 @@ public enum Client {
             }
             return true;
         } else if (text.startsWith(FLIP)) {
-            try { //am3485 4/1/2024
+            try { // am3485 4/1/2024
                 sendFlip();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -250,7 +283,7 @@ public enum Client {
         Random gen = new Random();
         FlipPayload p = new FlipPayload();
         int c = gen.nextInt(1000) % 2;
-        if (c == 1) {//am3485 4/1/2024
+        if (c == 1) {// am3485 4/1/2024
             System.out.println("Heads");
             p.setResult("Heads");
         } else {
@@ -282,7 +315,7 @@ public enum Client {
             } catch (Exception e) {
                 System.out.println("invalid!!!!");
             }
-            //am3485 4/1/2024
+            // am3485 4/1/2024
         } else if (!text.toLowerCase().contains("d") && text.matches("\\d+")) {// Checks if it doesn't contain a "d" AND
                                                                                // if there are only digits in the string
             // Parses the text to a number
@@ -301,32 +334,32 @@ public enum Client {
         }
     }
 
-    private void sendReadyCheck() throws IOException {
+    public void sendReadyCheck() throws IOException {
         ReadyPayload rp = new ReadyPayload();
         out.writeObject(rp);
     }
 
-    private void sendDisconnect() throws IOException {
+    public void sendDisconnect() throws IOException {
         ConnectionPayload cp = new ConnectionPayload();
         cp.setPayloadType(PayloadType.DISCONNECT);
         out.writeObject(cp);
     }
 
-    private void sendCreateRoom(String roomName) throws IOException {
+    public void sendCreateRoom(String roomName) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.CREATE_ROOM);
         p.setMessage(roomName);
         out.writeObject(p);
     }
 
-    private void sendJoinRoom(String roomName) throws IOException {
+    public void sendJoinRoom(String roomName) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.JOIN_ROOM);
         p.setMessage(roomName);
         out.writeObject(p);
     }
 
-    private void sendListRooms(String searchString) throws IOException {
+    public void sendListRooms(String searchString) throws IOException {
         // Updated after video to use RoomResultsPayload so we can (later) use a limit
         // value
         RoomResultsPayload p = new RoomResultsPayload();
@@ -342,7 +375,7 @@ public enum Client {
         out.writeObject(p);
     }
 
-    private void sendMessage(String message) throws IOException {
+    public void sendMessage(String message) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.MESSAGE);
         p.setMessage(message);
@@ -388,6 +421,38 @@ public enum Client {
             }
         };
         inputThread.start();
+    }
+
+    private void listenForServerPayload() {
+        fromServerThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Payload fromServer;
+
+                    // while we're connected, listen for strings from server
+                    while (!server.isClosed() && !server.isInputShutdown()
+                            && (fromServer = (Payload) in.readObject()) != null) {
+
+                        logger.info("Debug Info: " + fromServer);
+                        processPayload(fromServer);
+
+                    }
+                    logger.info("Loop exited");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (!server.isClosed()) {
+                        logger.severe("Server closed connection");
+                    } else {
+                        logger.severe("Connection closed");
+                    }
+                } finally {
+                    close();
+                    logger.info("Stopped listening to server input");
+                }
+            }
+        };
+        fromServerThread.start();// start the thread
     }
 
     private void listenForServerMessage() {
@@ -437,7 +502,7 @@ public enum Client {
         }
     }
 
-    private String getClientNameFromId(long id) {
+    public String getClientNameFromId(long id) {
         if (clientsInRoom.containsKey(id)) {
             return clientsInRoom.get(id).getClientName();
         }
@@ -463,8 +528,10 @@ public enum Client {
                 } else {
                     logger.info(TextFX.colorize("Setting client id to default", Color.RED));
                 }
+                events.onReceiveClientId(p.getClientId());
                 break;
             case CONNECT:// for now connect,disconnect are all the same
+
             case DISCONNECT:
                 ConnectionPayload cp = (ConnectionPayload) p;
                 message = TextFX.colorize(String.format("*%s %s*",
@@ -475,13 +542,24 @@ public enum Client {
                 ConnectionPayload cp2 = (ConnectionPayload) p;
                 if (cp2.getPayloadType() == PayloadType.CONNECT || cp2.getPayloadType() == PayloadType.SYNC_CLIENT) {
                     addClientReference(cp2.getClientId(), cp2.getClientName());
+
                 } else if (cp2.getPayloadType() == PayloadType.DISCONNECT) {
                     removeClientReference(cp2.getClientId());
+                }
+                // TODO refactor this to avoid all these messy if condition (resulted from poor
+                // planning ahead)
+                if (cp2.getPayloadType() == PayloadType.CONNECT) {
+                    events.onClientConnect(p.getClientId(), cp2.getClientName(), p.getMessage());
+                } else if (cp2.getPayloadType() == PayloadType.DISCONNECT) {
+                    events.onClientDisconnect(p.getClientId(), cp2.getClientName(), p.getMessage());
+                } else if (cp2.getPayloadType() == PayloadType.SYNC_CLIENT) {
+                    events.onSyncClient(p.getClientId(), cp2.getClientName());
                 }
 
                 break;
             case JOIN_ROOM:
                 clientsInRoom.clear();// we changed a room so likely need to clear the list
+                events.onResetUserList();
                 break;
             case MESSAGE:
 
@@ -489,6 +567,7 @@ public enum Client {
                         getClientNameFromId(p.getClientId()),
                         p.getMessage()), Color.BLUE);
                 System.out.println(message);
+                events.onMessageReceive(p.getClientId(), p.getMessage());
                 break;
             case LIST_ROOMS:
                 try {
@@ -505,6 +584,7 @@ public enum Client {
                         String msg = String.format("%s %s", (i + 1), rooms.get(i));
                         System.out.println(TextFX.colorize(msg, Color.CYAN));
                     }
+                    events.onReceiveRoomList(rp.getRooms(), rp.getMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -567,7 +647,7 @@ public enum Client {
                     FlipPayload fp = (FlipPayload) p;
                     fp.toString();
                 } catch (Exception e) {
-                    
+
                 }
                 break;
             // case END_SESSION: //clearing all local player data

@@ -211,7 +211,7 @@ public enum Server {
      */
     protected synchronized void broadcast(String message) {
         if (processCommand(message)) {
-            
+
             return;
         }
         // loop over rooms and send out the message
