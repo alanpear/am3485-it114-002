@@ -21,6 +21,7 @@ public class FlipPayload extends Payload {
                 getResult(), getClientId());
     }
 
+    //am3485 4/15/2024
     public String lolString() {
         return String.format("Type[%s], Result[%s] ", getPayloadType().toString(),
                 getResult());
