@@ -1,6 +1,7 @@
 package Project.Client.Views;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
@@ -49,12 +50,16 @@ public class ChatPanel extends JPanel {
         // no need to add content specifically because scroll wraps it
         wrapper.add(scroll);
         this.add(wrapper, BorderLayout.CENTER);
-
+        content.setForeground(Color.blue);
         JPanel input = new JPanel();
         input.setLayout(new BoxLayout(input, BoxLayout.X_AXIS));
         JTextField textValue = new JTextField();
         input.add(textValue);
         JButton button = new JButton("Send");
+        JTextField diceValue = new JTextField();//am3485 4/15/2024
+        //input.add(diceValue);
+        JButton rbutton = new JButton("Roll");//am3485 4/15/2024
+        JButton fbutton = new JButton("Flip");//am3485 4/15/2024
         // lets us submit with the enter key instead of just the button click
         textValue.addKeyListener(new KeyListener() {
 
@@ -94,8 +99,46 @@ public class ChatPanel extends JPanel {
                 e1.printStackTrace();
             }
         });
+        input.add(button);//am3485 4/15/2024
+        input.add(diceValue);//am3485 4/15/2024
+        fbutton.addActionListener((event) -> {
+            try {
+                if (true) {
+                    Client.INSTANCE.sendFlip();
+                    //am3485 4/15/2024
+                    // debugging
+                    logger.log(Level.FINEST, "Content: " + content.getSize());
+                    logger.log(Level.FINEST, "Parent: " + this.getSize());
+
+                }
+            } catch (NullPointerException e) {
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        });
+        rbutton.addActionListener((event) -> {
+            try {
+                String rollText = diceValue.getText().trim();
+                if (rollText.length() > 0) {
+                    Client.INSTANCE.sendRoll(rollText);
+                    diceValue.setText("");// clear the original text
+                    //am3485 4/15/2024
+                    // debugging
+                    logger.log(Level.FINEST, "Content: " + content.getSize());
+                    logger.log(Level.FINEST, "Parent: " + this.getSize());
+
+                }
+            } catch (NullPointerException e) {
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        });
         chatArea = content;
-        input.add(button);
+        //am3485 4/15/2024
+        input.add(rbutton);
+        input.add(fbutton);
         userListPanel = new UserListPanel();
         this.add(userListPanel, BorderLayout.EAST);
         this.add(input, BorderLayout.SOUTH);
@@ -140,6 +183,7 @@ public class ChatPanel extends JPanel {
                 // System.out.println("Moved to " + e.getComponent().getLocation());
             }
         });
+        
     }
 
     public void addUserListItem(long clientId, String clientName) {
@@ -157,7 +201,7 @@ public class ChatPanel extends JPanel {
     public void addText(String text) {
         JPanel content = chatArea;
         // add message
-        JEditorPane textContainer = new JEditorPane("text/plain", text);
+        JEditorPane textContainer = new JEditorPane("text/html", text);
 
         // sizes the panel to attempt to take up the width of the container
         // and expand in height based on word wrapping

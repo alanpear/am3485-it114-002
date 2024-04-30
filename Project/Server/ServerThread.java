@@ -301,6 +301,7 @@ public class ServerThread extends Thread {
                     FlipPayload fp = (FlipPayload) p;
                     fp.toString();//am3485 4/1/2024
                     send(fp);
+                    currentRoom.sendMessage(this, fp.lolString());//am3485 4/15/2024
                 }catch (Exception e){
                     this.sendMessage(Constants.DEFAULT_CLIENT_ID,
                             "You can only use the /turn commmand in a GameRoom and not the Lobby");
@@ -311,6 +312,7 @@ public class ServerThread extends Thread {
                     RollPayload rp =(RollPayload) p;
                     rp.toString();
                     send(rp);//am3485 4/1/2024
+                    currentRoom.sendMessage(this, rp.lolString());//am3485 4/15/2024
                 }catch (Exception e){
                     this.sendMessage(Constants.DEFAULT_CLIENT_ID,
                             "You can only use the /turn commmand in a GameRoom and not the Lobby");
