@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.*;
+import java.util.*;
+import java.text.SimpleDateFormat;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -32,7 +35,8 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     private static Logger logger = Logger.getLogger(ClientUI.class.getName());
     private JPanel currentCardPanel = null;
     private CardView currentCard = CardView.CONNECT;
-
+    private int counter = 0;
+    
     // private Hashtable<Long, String> userList = new Hashtable<Long, String>();
 
     private long myId = Constants.DEFAULT_CLIENT_ID;
@@ -152,6 +156,7 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     }
 
     public static void main(String[] args) {
+        
         new ClientUI("Client");
     }
 
@@ -184,6 +189,25 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         if (currentCard.ordinal() >= CardView.CHAT.ordinal()) {
             String clientName = Client.INSTANCE.getClientNameFromId(clientId);
             chatPanel.addText(String.format("%s: %s", clientName, message));
+            String currentDate = new SimpleDateFormat("MM/dd/yyyy").format(new Date()); 
+            
+            //am3485 4/29/24
+            try{
+                FileWriter writer = new FileWriter ("ChatHistory.html", true);
+                counter++;
+                BufferedWriter br = new BufferedWriter(writer);
+                PrintWriter pr = new PrintWriter(br);
+                if(counter == 1){
+                    pr.println(currentDate);
+                }
+                pr.println(String.format("%s: %s", clientName, message));
+                pr.close();
+                br.close();
+                writer.close();
+            }
+            catch(Exception E){
+
+            }
         }
     }
 

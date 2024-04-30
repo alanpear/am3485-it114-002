@@ -3,6 +3,7 @@ package Project.Client;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.File;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import Project.Common.RoomResultsPayload;
 import Project.Common.TextFX;
 import Project.Common.TurnStatusPayload;
 import Project.Common.TextFX.Color;
+
 
 public enum Client {
     INSTANCE;
@@ -720,6 +722,17 @@ public enum Client {
     }
 
     public static void main(String[] args) {
+        try {
+            File myObj = new File("ChatHistory.html");
+            if (myObj.createNewFile()) {
+              System.out.println("File created: " + myObj.getName());
+            } else {
+              System.out.println("File already exists.");
+            }
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
         Client client = Client.INSTANCE; // new Client();
 
         try {
